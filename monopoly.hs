@@ -82,29 +82,27 @@ cobraAlquileres jugador
 sumarBarata:: Acciones
 sumarBarata jugador= jugador {
 
-              dinero = dinero jugador + (cantPropiedadesBaratas * 10)
+              dinero = dinero jugador + (cantPropiedadesBaratas (propiedades jugador)* 10)
 
 }
 
 sumarCaras:: Acciones
-sumarCaras jugador = jugador{
-            dinero = dinero jugador + (cantPropiedadesCaras *20)
+sumarCaras  jugador = jugador{
+            dinero = dinero jugador + (cantPropiedadesCaras (propiedades jugador) *20)
 
 
 }
 
 cantPropiedadesCaras::[Propiedad] -> Int
-cantPropiedadesCaras propiedades = (length.filter esPropiedadCaras )propiedades
-esPropiedadCaras::[Propiedad] -> Bool
-esPropiedadCaras propiedades = ((150<).precioPropiedad)propiedades
+cantPropiedadesCaras lstpropiedades = (length.filter esPropiedadCaras )lstpropiedades
+esPropiedadCaras::Propiedad -> Bool
+esPropiedadCaras propiedad = ((150<).precioPropiedad)propiedad
 
 
 cantPropiedadesBaratas::[Propiedad] -> Int
-cantPropiedadesBaratas propiedades = (length.filter esPropiedadBarata )propiedades
-esPropiedadBarata::[Propiedad] -> Bool
-esPropiedadBarata propiedades = ((150<).precioPropiedad)propiedades
-
-
+cantPropiedadesBaratas lstpropiedades = (length.filter esPropiedadBarata )lstpropiedades
+esPropiedadBarata::Propiedad -> Bool
+esPropiedadBarata propiedad = ((150<).precioPropiedad)propiedad
  --pagarAAccionistas -> No pude hacerlo :(
 
  -------------------------------------------
