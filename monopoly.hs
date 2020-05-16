@@ -1,54 +1,72 @@
 import Text.Show.Functions()
 import Data.List ()
-{-Carolina y Manuel son participantes del juego y tienen las siguientes características:
 
-            -Su nombre.
-            -Una cantidad de dinero.
-            -Su táctica de juego.
-            -Sus propiedades compradas, de las cuales sabemos su nombre y su precio.
-            -Sus acciones a lo largo del juego.
--}
-
-type Propiedad = (String,Float)
-type Dinero = (Num a)
+-- Modelando a Carolina y a Manuel----------------------
+type Propiedad = (String,Int)
 
 type Tactica= String
 
 data Jugador = Jugador {
             nombre::String,
-            dinero::Dinero,
+            dinero::Int,
             tactica::Tactica,
             propiedades::[Propiedad],
-            acciones:: [Acciones]
+            acciones:: [Accion]
 } deriving (Show)
+
+carolina::Jugador
+carolina = Jugador {
+            nombre= "Carolina",
+            dinero=500,
+            tactica = "Accionista",
+            propiedades =[],
+            acciones = [pasarPorElBanco, pagarAccionistas] 
+
+
+}
+
+manuel::Jugador
+manuel= Jugador{
+            nombre= "Manuel",
+            dinero=500,
+            tactica = "Oferente singular",
+            propiedades =[],
+            acciones = [enojarse, pasarPorElBanco]
+
+         
+}
+
 
 --Modelar Acciones
 --recibe un jugador y devuelve un jugador modificado
-type Acciones = Jugador -> Jugador
+type Accion = Jugador -> Jugador
 
-pasarPorElBanco:: Acciones
+pasarPorElBanco:: Accion
 pasarPorElBanco jugador = jugador{ 
-                dinero = dinero jugador + 40,
+                dinero = agregarDinero (+40) jugador,
                 tactica= "Comprador compulsivo"
 
 
  }
 
-enojarse:: Acciones
+enojarse:: Accion
 enojarse jugador =  jugador{
-            dinero = dinero jugador + 50,
+            dinero = agregarDinero (+50) jugador,
             acciones= gritar : acciones jugador 
 
 
   }
-
-gritar:: Acciones 
+---Funcion Aux--------------
+agregarDinero:: (Int -> Int) -> Jugador->Int
+agregarDinero  funcion jugador = (funcion.dinero)jugador   
+-----------------------------------------------------------------
+gritar:: Accion 
 gritar jugador = jugador{
                 nombre = "AHHHH" ++ nombre jugador 
 }
 -------------------------------------------------------------------------------
 
-subastar:: Propiedad -> Acciones
+subastar:: Propiedad -> Accion
 subastar  unaPropiedad jugador
                             | esTacticaSubastadora (tactica jugador)  = ganaPropiedad unaPropiedad jugador
                             | otherwise= jugador
@@ -61,10 +79,10 @@ esTacticaSubastadora _ = False
 
 --Accessors--
 
-precioPropiedad::Propiedad -> Float
-precioPropiedad(_,precio)=precio
+precioPropiedad::Propiedad -> Int
+precioPropiedad(_,precio)= precio
 
-ganaPropiedad:: Propiedad ->Acciones
+ganaPropiedad:: Propiedad ->Accion
 ganaPropiedad nuevaPropiedad jugador = jugador {
                                 dinero = dinero jugador - precioPropiedad nuevaPropiedad,
                                 propiedades= nuevaPropiedad : propiedades jugador
@@ -72,63 +90,61 @@ ganaPropiedad nuevaPropiedad jugador = jugador {
 }
 
 -----------------------------------------------------------------------------------
-cobraAlquileres:: Acciones
-cobraAlquileres jugador 
-                  | map esPropiedadBarata (propiedades jugador)= sumarBarata jugador
-                  | otherwise =   sumarCaras jugador
-                     
-                     
-
-sumarBarata:: Acciones
-sumarBarata jugador= jugador {
-
-              dinero = dinero jugador + (cantPropiedadesBaratas (propiedades jugador)* 10)
-
-}
-
-sumarCaras:: Acciones
-sumarCaras  jugador = jugador{
-            dinero = dinero jugador + (cantPropiedadesCaras (propiedades jugador) *20)
+cobraAlquileres:: Accion
+cobraAlquileres jugador = jugador{
+                          dinero = dinero jugador + sumaDeAlquileres (propiedades jugador)
 
 
 }
 
-cantPropiedadesCaras::[Propiedad] -> Int
-cantPropiedadesCaras lstpropiedades = (length.filter esPropiedadCaras )lstpropiedades
-esPropiedadCaras::Propiedad -> Bool
-esPropiedadCaras propiedad = ((150<).precioPropiedad)propiedad
+sumaDeAlquileres:: [Propiedad] -> Int
+sumaDeAlquileres propiedades' = (sum.map precioDeAlquiler) propiedades'
 
+precioDeAlquiler::Propiedad->Int
+precioDeAlquiler propiedad
+                          |precioPropiedad propiedad< 150 = 10
+                          |otherwise = 20
 
-cantPropiedadesBaratas::[Propiedad] -> Int
-cantPropiedadesBaratas lstpropiedades = (length.filter esPropiedadBarata )lstpropiedades
-esPropiedadBarata::Propiedad -> Bool
-esPropiedadBarata propiedad = ((150<).precioPropiedad)propiedad
- --pagarAAccionistas -> No pude hacerlo :(
+--------------------------------------------------------------------------
+pagarAccionistas::Accion
+pagarAccionistas jugador 
+            |(esAccionista.tactica)jugador= jugador{dinero= dinero jugador + 200} 
+ 
+            |otherwise = jugador{dinero= dinero jugador - 100} 
+
+esAccionista :: Tactica -> Bool
+esAccionista tactica' = (== "Accionista") tactica' 
+
+-----------------------------------------------------------------------------
+hacerBerrinchePor::Propiedad -> Accion
+hacerBerrinchePor propiedad jugador
+              |puedoComprarPropiedad propiedad jugador= comprarPropiedad propiedad jugador
+              |otherwise= hacerBerrinchePor propiedad ((gritar.modificarDinero)jugador)
+               
+                         
+
+modificarDinero::Accion
+modificarDinero jugador = jugador{
+                          dinero = dinero jugador + 10
+
+}
+
+puedoComprarPropiedad::Propiedad->Jugador->Bool
+puedoComprarPropiedad propiedad jugador =  precioPropiedad  propiedad < dinero jugador 
+
+comprarPropiedad:: Propiedad -> Accion
+comprarPropiedad propiedad jugador = jugador{
+
+                      propiedades = propiedad : propiedades jugador  
+
+}
 
  -------------------------------------------
+--ultimaRonda:: Jugador -> Accion
+--ultimaRonda 
 
--- Modelando a Carolina y a Manuel----------------------
-carolina = Jugador {
-            nombre= "Carolina",
-            dinero=500,
-            tactica = "Accionista",
-            propiedades =[],
-            acciones = [pagarAAccionistas]
-
-
-
-}
-
-manuel= Jugador{
-            nombre= "Manuel",
-            dinero=500,
-            tactica = "Oferente singular",
-            propiedades =[],
-            acciones = [enojarse]
-
-         
-}
-
---Me falto modela Acciones y Propiedades, como se hace??
-
-
+--El ganador es:-----------------------------------------
+juegoFinal:: Jugador -> Jugador -> Jugador
+juegoFinal j1 j2 
+          | dinero j1 > dinero j2 = j1
+          | otherwise = j2
